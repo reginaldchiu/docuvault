@@ -91,7 +91,7 @@ DocuVault/
 
 ```bash
 git clone https://github.com/reginaldchiu/docuvault.git
-cd docuvault-dotnet
+cd docuvault
 ```
 
 ### Restore Dependencies
