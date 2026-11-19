@@ -68,7 +68,7 @@ DocuVault/
 ├── .gitignore
 ├── mise.toml
 ├── README.md
-└── DocuVault.sln
+└── DocuVault.slnx
 ```
 
 ### Project Dependencies
@@ -90,8 +90,8 @@ DocuVault/
 ### Clone the Repository
 
 ```bash
-git clone https://github.com/reginaldchiu/docuvault-dotnet.git
-cd docuvault-dotnet
+git clone https://github.com/reginaldchiu/docuvault.git
+cd docuvault
 ```
 
 ### Restore Dependencies

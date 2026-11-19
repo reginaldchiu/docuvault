@@ -1,0 +1,12 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/DocuVault.Api/DocuVault.Api.csproj" />
+    <Project Path="src/DocuVault.Application/DocuVault.Application.csproj" />
+    <Project Path="src/DocuVault.Domain/DocuVault.Domain.csproj" />
+    <Project Path="src/DocuVault.Infrastructure/DocuVault.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/DocuVault.IntegrationTests/DocuVault.IntegrationTests.csproj" />
+    <Project Path="tests/DocuVault.UnitTests/DocuVault.UnitTests.csproj" />
+  </Folder>
+</Solution>
