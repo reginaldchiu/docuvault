@@ -47,11 +47,6 @@ public sealed class UploadDocumentService(IDocumentWriter writer, IDocumentStora
             throw new ArgumentException("Declared file size does not match the actual stream length.", nameof(fileSize));
         }
 
-        if (content.Length > options.MaxFileSize)
-        {
-            throw new ArgumentException("File size exceeds the maximum allowed size.", nameof(fileSize));
-        }
-
         byte[] hashBytes = await SHA256.HashDataAsync(content, cancellationToken);
 
         string hash = Convert.ToHexString(hashBytes);

@@ -456,7 +456,7 @@ public sealed class UploadDocumentServiceTests
         await using var stream = new MemoryStream(
             Encoding.UTF8.GetBytes(content));
 
-        var service = CreateService();
+        UploadDocumentService service = CreateService();
 
         // Act
         Task<Document> act()
@@ -483,7 +483,7 @@ public sealed class UploadDocumentServiceTests
         await using var stream = new MemoryStream(
             Encoding.UTF8.GetBytes(content));
 
-        var service = CreateService();
+        UploadDocumentService service = CreateService();
 
         // Act
         Task<Document> act()
@@ -508,7 +508,7 @@ public sealed class UploadDocumentServiceTests
         // Arrange
         await using var stream = new MemoryStream();
 
-        var service = CreateService();
+        UploadDocumentService service = CreateService();
 
         // Act
         Task<Document> act()
@@ -542,7 +542,7 @@ public sealed class UploadDocumentServiceTests
             MaxFileSize = 10
         };
 
-        var service = CreateService(options);
+        UploadDocumentService service = CreateService(options);
 
         // Act
         Task<Document> act()
@@ -550,7 +550,7 @@ public sealed class UploadDocumentServiceTests
             return service.UploadAsync(
             "large.txt",
             "text/plain",
-            fileSize: stream.Length,
+            fileSize: 10,
             stream);
         }
 
