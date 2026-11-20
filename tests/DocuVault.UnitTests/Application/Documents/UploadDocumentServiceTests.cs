@@ -1,5 +1,6 @@
 
 using System.Security.Cryptography;
+using System.Text;
 using DocuVault.Application.Abstractions.Persistence;
 using DocuVault.Application.Abstractions.Storage;
 using DocuVault.Application.Documents;
@@ -106,6 +107,15 @@ public sealed class UploadDocumentServiceTests
             });
     }
 
+    private UploadDocumentService CreateService(DocumentUploadOptions options)
+    {
+        return new UploadDocumentService(
+            _writer,
+            _storage,
+            options
+        );
+    }
+
     private static MemoryStream CreateContentStream()
     {
         return new MemoryStream(
@@ -115,11 +125,11 @@ public sealed class UploadDocumentServiceTests
     [Fact]
     public async Task UploadAsyncShouldCreateAndPersistDocument()
     {
-        using var content = CreateContentStream();
+        using MemoryStream content = CreateContentStream();
 
-        var service = CreateService();
+        UploadDocumentService service = CreateService();
 
-        var result = await service.UploadAsync(
+        Document result = await service.UploadAsync(
             "contract.pdf",
             "application/pdf",
             content.Length,
@@ -143,14 +153,14 @@ public sealed class UploadDocumentServiceTests
     [Fact]
     public async Task UploadAsyncShouldCalculateCorrectSha256Hash()
     {
-        using var content = CreateContentStream();
+        using MemoryStream content = CreateContentStream();
 
-        var expectedHash = Convert.ToHexString(
+        string expectedHash = Convert.ToHexString(
             SHA256.HashData(content.ToArray()));
 
-        var service = CreateService();
+        UploadDocumentService service = CreateService();
 
-        var result = await service.UploadAsync(
+        Document result = await service.UploadAsync(
             "contract.pdf",
             "application/pdf",
             content.Length,
@@ -162,11 +172,11 @@ public sealed class UploadDocumentServiceTests
     [Fact]
     public async Task UploadAsyncShouldSaveOriginalStreamContent()
     {
-        using var content = CreateContentStream();
+        using MemoryStream content = CreateContentStream();
 
-        var expectedContent = content.ToArray();
+        byte[] expectedContent = content.ToArray();
 
-        var service = CreateService();
+        UploadDocumentService service = CreateService();
 
         _ = await service.UploadAsync(
             "contract.pdf",
@@ -181,18 +191,18 @@ public sealed class UploadDocumentServiceTests
     [Fact]
     public async Task UploadAsyncShouldGenerateUniqueDocumentIds()
     {
-        using var firstContent = CreateContentStream();
-        using var secondContent = CreateContentStream();
+        using MemoryStream firstContent = CreateContentStream();
+        using MemoryStream secondContent = CreateContentStream();
 
-        var service = CreateService();
+        UploadDocumentService service = CreateService();
 
-        var first = await service.UploadAsync(
+        Document first = await service.UploadAsync(
             "first.pdf",
             "application/pdf",
             firstContent.Length,
             firstContent);
 
-        var second = await service.UploadAsync(
+        Document second = await service.UploadAsync(
             "second.pdf",
             "application/pdf",
             secondContent.Length,
@@ -206,9 +216,9 @@ public sealed class UploadDocumentServiceTests
     [Fact]
     public async Task UploadAsyncShouldRejectEmptyFileName()
     {
-        using var content = CreateContentStream();
+        using MemoryStream content = CreateContentStream();
 
-        var service = CreateService();
+        UploadDocumentService service = CreateService();
 
         _ = await Assert.ThrowsAsync<ArgumentException>(
             () => service.UploadAsync(
@@ -224,9 +234,9 @@ public sealed class UploadDocumentServiceTests
     [Fact]
     public async Task UploadAsyncShouldRejectEmptyContentType()
     {
-        using var content = CreateContentStream();
+        using MemoryStream content = CreateContentStream();
 
-        var service = CreateService();
+        UploadDocumentService service = CreateService();
 
         _ = await Assert.ThrowsAsync<ArgumentException>(
             () => service.UploadAsync(
@@ -244,9 +254,9 @@ public sealed class UploadDocumentServiceTests
     [InlineData(-1)]
     public async Task UploadAsyncShouldRejectInvalidFileSize(long fileSize)
     {
-        using var content = CreateContentStream();
+        using MemoryStream content = CreateContentStream();
 
-        var service = CreateService();
+        UploadDocumentService service = CreateService();
 
         _ = await Assert.ThrowsAsync<ArgumentOutOfRangeException>(
             () => service.UploadAsync(
@@ -262,9 +272,9 @@ public sealed class UploadDocumentServiceTests
     [Fact]
     public async Task UploadAsyncShouldRejectFileLargerThanMaximumSize()
     {
-        using var content = CreateContentStream();
+        using MemoryStream content = CreateContentStream();
 
-        var service = CreateService();
+        UploadDocumentService service = CreateService();
 
         _ = await Assert.ThrowsAsync<ArgumentException>(
             () => service.UploadAsync(
@@ -280,10 +290,10 @@ public sealed class UploadDocumentServiceTests
     [Fact]
     public async Task UploadAsyncShouldRejectUnreadableStream()
     {
-        using var content = CreateContentStream();
+        using MemoryStream content = CreateContentStream();
         content.Dispose();
 
-        var service = CreateService();
+        UploadDocumentService service = CreateService();
 
         _ = await Assert.ThrowsAsync<ArgumentException>(
             () => service.UploadAsync(
@@ -299,11 +309,11 @@ public sealed class UploadDocumentServiceTests
     [Fact]
     public async Task UploadAsyncShouldRejectNonSeekableStream()
     {
-        using var innerStream = CreateContentStream();
+        using MemoryStream innerStream = CreateContentStream();
 
         await using var content = new NonSeekableStream(innerStream);
 
-        var service = CreateService();
+        UploadDocumentService service = CreateService();
 
         _ = await Assert.ThrowsAsync<ArgumentException>(
             () => service.UploadAsync(
@@ -319,11 +329,11 @@ public sealed class UploadDocumentServiceTests
     [Fact]
     public async Task UploadAsyncShouldNotPersistWhenStorageFails()
     {
-        using var content = CreateContentStream();
+        using MemoryStream content = CreateContentStream();
 
         _storage.SaveException = new IOException("Storage failed.");
 
-        var service = CreateService();
+        UploadDocumentService service = CreateService();
 
         _ = await Assert.ThrowsAsync<IOException>(
             () => service.UploadAsync(
@@ -339,12 +349,12 @@ public sealed class UploadDocumentServiceTests
     [Fact]
     public async Task UploadAsyncShouldDeleteFileWhenPersistenceFails()
     {
-        using var content = CreateContentStream();
+        using MemoryStream content = CreateContentStream();
 
         _writer.ExceptionToThrow = new InvalidOperationException(
             "Database failed.");
 
-        var service = CreateService();
+        UploadDocumentService service = CreateService();
 
         _ = await Assert.ThrowsAsync<InvalidOperationException>(
             () => service.UploadAsync(
@@ -364,7 +374,7 @@ public sealed class UploadDocumentServiceTests
     [Fact]
     public async Task UploadAsyncShouldThrowAggregateExceptionWhenCleanupFails()
     {
-        using var content = CreateContentStream();
+        using MemoryStream content = CreateContentStream();
 
         _writer.ExceptionToThrow = new InvalidOperationException(
             "Database failed.");
@@ -372,9 +382,9 @@ public sealed class UploadDocumentServiceTests
         _storage.DeleteException = new IOException(
             "File cleanup failed.");
 
-        var service = CreateService();
+        UploadDocumentService service = CreateService();
 
-        var exception = await Assert.ThrowsAsync<AggregateException>(
+        AggregateException exception = await Assert.ThrowsAsync<AggregateException>(
             () => service.UploadAsync(
                 "contract.pdf",
                 "application/pdf",
@@ -393,10 +403,10 @@ public sealed class UploadDocumentServiceTests
     [Fact]
     public async Task UploadAsyncShouldForwardCancellationToken()
     {
-        using var content = CreateContentStream();
+        using MemoryStream content = CreateContentStream();
         using var cts = new CancellationTokenSource();
 
-        var service = CreateService();
+        UploadDocumentService service = CreateService();
 
         _ = await service.UploadAsync(
             "contract.pdf",
@@ -417,13 +427,13 @@ public sealed class UploadDocumentServiceTests
     [Fact]
     public async Task UploadAsyncShouldUseNonCancelableTokenForCleanup()
     {
-        using var content = CreateContentStream();
+        using MemoryStream content = CreateContentStream();
         using var cts = new CancellationTokenSource();
 
         _writer.ExceptionToThrow = new InvalidOperationException(
             "Database failed.");
 
-        var service = CreateService();
+        UploadDocumentService service = CreateService();
 
         _ = await Assert.ThrowsAsync<InvalidOperationException>(
             () => service.UploadAsync(
@@ -436,6 +446,119 @@ public sealed class UploadDocumentServiceTests
         Assert.Equal(
             CancellationToken.None,
             _storage.DeleteCancellationToken);
+    }
+
+    [Fact]
+    public async Task UploadAsyncShouldRejectFileSizeSmallerThanActualStreamLength()
+    {
+        // Arrange
+        const string content = "This is a test document.";
+        await using var stream = new MemoryStream(
+            Encoding.UTF8.GetBytes(content));
+
+        var service = CreateService();
+
+        // Act
+        Task<Document> act()
+        {
+            return service.UploadAsync(
+            "test.txt",
+            "text/plain",
+            fileSize: 10,
+            stream);
+        }
+
+        // Assert
+        _ = await Assert.ThrowsAsync<ArgumentException>((Func<Task<Document>>)act);
+
+        Assert.Empty(_storage.SavedDocumentIds);
+        Assert.Empty(_writer.Documents);
+    }
+
+    [Fact]
+    public async Task UploadAsyncShouldRejectFileSizeLargerThanActualStreamLength()
+    {
+        // Arrange
+        const string content = "Small file";
+        await using var stream = new MemoryStream(
+            Encoding.UTF8.GetBytes(content));
+
+        var service = CreateService();
+
+        // Act
+        Task<Document> act()
+        {
+            return service.UploadAsync(
+            "test.txt",
+            "text/plain",
+            fileSize: 100,
+            stream);
+        }
+
+        // Assert
+        _ = await Assert.ThrowsAsync<ArgumentException>((Func<Task<Document>>)act);
+
+        Assert.Empty(_storage.SavedDocumentIds);
+        Assert.Empty(_writer.Documents);
+    }
+
+    [Fact]
+    public async Task UploadAsyncShouldRejectEmptyActualStream()
+    {
+        // Arrange
+        await using var stream = new MemoryStream();
+
+        var service = CreateService();
+
+        // Act
+        Task<Document> act()
+        {
+            return service.UploadAsync(
+            "empty.txt",
+            "text/plain",
+            fileSize: 1,
+            stream);
+        }
+
+        // Assert
+        _ = await Assert.ThrowsAsync<ArgumentException>((Func<Task<Document>>)act);
+
+        Assert.Empty(_storage.SavedDocumentIds);
+        Assert.Empty(_writer.Documents);
+    }
+
+    [Fact]
+    public async Task UploadAsyncShouldRejectActualStreamLargerThanMaximumSize()
+    {
+        // Arrange
+        const string content = "This content exceeds the limit.";
+
+        await using var stream = new MemoryStream(
+            Encoding.UTF8.GetBytes(content));
+
+
+        var options = new DocumentUploadOptions
+        {
+            MaxFileSize = 10
+        };
+
+        var service = CreateService(options);
+
+        // Act
+        Task<Document> act()
+        {
+            return service.UploadAsync(
+            "large.txt",
+            "text/plain",
+            fileSize: stream.Length,
+            stream);
+        }
+
+        // Assert
+        _ = await Assert.ThrowsAsync<ArgumentException>((Func<Task<Document>>)act);
+
+        Assert.Empty(_storage.SavedDocumentIds);
+        Assert.Empty(_writer.Documents);
     }
 
     private sealed class NonSeekableStream(Stream innerStream) : Stream

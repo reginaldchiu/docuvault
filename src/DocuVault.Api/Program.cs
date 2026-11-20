@@ -5,9 +5,9 @@ using DocuVault.Infrastructure.Persistence;
 using DocuVault.Infrastructure.Storage;
 using Microsoft.EntityFrameworkCore;
 
-var builder = WebApplication.CreateBuilder(args);
+WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
-var uploadOptions = builder.Configuration
+DocumentUploadOptions uploadOptions = builder.Configuration
     .GetSection("DocumentUpload")
     .Get<DocumentUploadOptions>() ??
     throw new InvalidOperationException("DocumentUpload configuration is missing.");
@@ -23,7 +23,7 @@ builder.Services.AddSingleton<IDocumentStorage, LocalDocumentStorage>();
 builder.Services.AddScoped<UploadDocumentService>();
 
 // Add services to the container.
-var connectionString =
+string connectionString =
     builder.Configuration.GetConnectionString("DefaultConnection")
     ?? throw new InvalidOperationException("Database connection string is not configured.");
 
@@ -37,7 +37,7 @@ builder.Services.AddControllers();
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
 
-var app = builder.Build();
+WebApplication app = builder.Build();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())

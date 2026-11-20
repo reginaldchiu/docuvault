@@ -42,9 +42,19 @@ public sealed class UploadDocumentService(IDocumentWriter writer, IDocumentStora
 
         content.Position = 0;
 
-        var hashBytes = await SHA256.HashDataAsync(content, cancellationToken);
+        if (content.Length != fileSize)
+        {
+            throw new ArgumentException("Declared file size does not match the actual stream length.", nameof(fileSize));
+        }
 
-        var hash = Convert.ToHexString(hashBytes);
+        if (content.Length > options.MaxFileSize)
+        {
+            throw new ArgumentException("File size exceeds the maximum allowed size.", nameof(fileSize));
+        }
+
+        byte[] hashBytes = await SHA256.HashDataAsync(content, cancellationToken);
+
+        string hash = Convert.ToHexString(hashBytes);
 
         content.Position = 0;
 

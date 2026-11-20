@@ -13,7 +13,7 @@ public sealed class LocalDocumentStorage(IOptions<LocalDocumentStorageOptions> o
     {
         cancellationToken.ThrowIfCancellationRequested();
 
-        var filePath = GetFilePath(documentId);
+        string filePath = GetFilePath(documentId);
 
         if (File.Exists(filePath))
         {
@@ -32,11 +32,11 @@ public sealed class LocalDocumentStorage(IOptions<LocalDocumentStorageOptions> o
             throw new ArgumentException("Content stream must be readable.", nameof(content));
         }
 
-        var filePath = GetFilePath(documentId);
+        string filePath = GetFilePath(documentId);
 
         _ = Directory.CreateDirectory(_rootPath);
 
-        var fileCreated = false;
+        bool fileCreated = false;
 
         try
         {
@@ -85,13 +85,10 @@ public sealed class LocalDocumentStorage(IOptions<LocalDocumentStorageOptions> o
     {
         ArgumentNullException.ThrowIfNull(options);
 
-        var rootPath = options.Value.RootPath;
+        string rootPath = options.Value.RootPath;
 
-        if (string.IsNullOrWhiteSpace(rootPath))
-        {
-            throw new InvalidOperationException("Document storage root path is not configured.");
-        }
-
-        return Path.GetFullPath(rootPath);
+        return string.IsNullOrWhiteSpace(rootPath)
+            ? throw new InvalidOperationException("Document storage root path is not configured.")
+            : Path.GetFullPath(rootPath);
     }
 }

@@ -12,7 +12,7 @@ public sealed class LocalDocumentStorageTests : IDisposable
 
     private LocalDocumentStorage CreateStorage()
     {
-        var options = Options.Create(
+        IOptions<LocalDocumentStorageOptions> options = Options.Create(
             new LocalDocumentStorageOptions
             {
                 RootPath = _rootPath
@@ -24,22 +24,22 @@ public sealed class LocalDocumentStorageTests : IDisposable
     [Fact]
     public async Task SaveAsyncShouldCreateDirectoryAndSaveFile()
     {
-        var storage = CreateStorage();
+        LocalDocumentStorage storage = CreateStorage();
 
         var documentId = Guid.NewGuid();
 
-        var expectedContent = "DocuVault storage test"u8.ToArray();
+        byte[] expectedContent = "DocuVault storage test"u8.ToArray();
 
         using var content = new MemoryStream(expectedContent);
 
         await storage.SaveAsync(documentId, content);
 
-        var filePath = GetFilePath(documentId);
+        string filePath = GetFilePath(documentId);
 
         Assert.True(Directory.Exists(_rootPath));
         Assert.True(File.Exists(filePath));
 
-        var actualContent = await File.ReadAllBytesAsync(filePath);
+        byte[] actualContent = await File.ReadAllBytesAsync(filePath);
 
         Assert.Equal(expectedContent, actualContent);
     }
@@ -47,7 +47,7 @@ public sealed class LocalDocumentStorageTests : IDisposable
     [Fact]
     public async Task SaveAsyncShouldUseDocumentIdAsFileName()
     {
-        var storage = CreateStorage();
+        LocalDocumentStorage storage = CreateStorage();
 
         var documentId = Guid.NewGuid();
 
@@ -56,11 +56,11 @@ public sealed class LocalDocumentStorageTests : IDisposable
 
         await storage.SaveAsync(documentId, content);
 
-        var expectedFileName = documentId.ToString("N");
+        string expectedFileName = documentId.ToString("N");
 
-        var files = Directory.GetFiles(_rootPath);
+        string[] files = Directory.GetFiles(_rootPath);
 
-        var file = Assert.Single(files);
+        string file = Assert.Single(files);
 
         Assert.Equal(expectedFileName, Path.GetFileName(file));
     }
@@ -68,12 +68,12 @@ public sealed class LocalDocumentStorageTests : IDisposable
     [Fact]
     public async Task SaveAsyncShouldNotOverwriteExistingFile()
     {
-        var storage = CreateStorage();
+        LocalDocumentStorage storage = CreateStorage();
 
         var documentId = Guid.NewGuid();
 
-        var originalContent = "original content"u8.ToArray();
-        var newContent = "new content"u8.ToArray();
+        byte[] originalContent = "original content"u8.ToArray();
+        byte[] newContent = "new content"u8.ToArray();
 
         using var firstStream = new MemoryStream(originalContent);
 
@@ -84,7 +84,7 @@ public sealed class LocalDocumentStorageTests : IDisposable
         _ = await Assert.ThrowsAsync<IOException>(
             () => storage.SaveAsync(documentId, secondStream));
 
-        var actualContent = await File.ReadAllBytesAsync(
+        byte[] actualContent = await File.ReadAllBytesAsync(
             GetFilePath(documentId));
 
         // The original file must remain untouched.
@@ -94,7 +94,7 @@ public sealed class LocalDocumentStorageTests : IDisposable
     [Fact]
     public async Task SaveAsyncShouldRejectUnreadableStream()
     {
-        var storage = CreateStorage();
+        LocalDocumentStorage storage = CreateStorage();
 
         var documentId = Guid.NewGuid();
 
@@ -110,7 +110,7 @@ public sealed class LocalDocumentStorageTests : IDisposable
     [Fact]
     public async Task SaveAsyncShouldDeleteIncompleteFileWhenCanceled()
     {
-        var storage = CreateStorage();
+        LocalDocumentStorage storage = CreateStorage();
 
         var documentId = Guid.NewGuid();
 
@@ -133,7 +133,7 @@ public sealed class LocalDocumentStorageTests : IDisposable
     [Fact]
     public async Task SaveAsyncShouldDeleteIncompleteFileWhenCopyFails()
     {
-        var storage = CreateStorage();
+        LocalDocumentStorage storage = CreateStorage();
 
         var documentId = Guid.NewGuid();
 
@@ -148,7 +148,7 @@ public sealed class LocalDocumentStorageTests : IDisposable
     [Fact]
     public async Task DeleteAsyncShouldRemoveExistingFile()
     {
-        var storage = CreateStorage();
+        LocalDocumentStorage storage = CreateStorage();
 
         var documentId = Guid.NewGuid();
 
@@ -167,11 +167,11 @@ public sealed class LocalDocumentStorageTests : IDisposable
     [Fact]
     public async Task DeleteAsyncShouldSucceedWhenFileDoesNotExist()
     {
-        var storage = CreateStorage();
+        LocalDocumentStorage storage = CreateStorage();
 
         var documentId = Guid.NewGuid();
 
-        var exception = await Record.ExceptionAsync(
+        Exception exception = await Record.ExceptionAsync(
             () => storage.DeleteAsync(documentId));
 
         Assert.Null(exception);
@@ -180,7 +180,7 @@ public sealed class LocalDocumentStorageTests : IDisposable
     [Fact]
     public async Task DeleteAsyncShouldRespectCancellationToken()
     {
-        var storage = CreateStorage();
+        LocalDocumentStorage storage = CreateStorage();
 
         var documentId = Guid.NewGuid();
 
@@ -203,7 +203,7 @@ public sealed class LocalDocumentStorageTests : IDisposable
     [Fact]
     public void ConstructorShouldRejectEmptyRootPath()
     {
-        var options = Options.Create(
+        IOptions<LocalDocumentStorageOptions> options = Options.Create(
             new LocalDocumentStorageOptions
             {
                 RootPath = ""
