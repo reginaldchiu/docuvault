@@ -1,9 +1,26 @@
 using DocuVault.Application.Abstractions.Persistence;
+using DocuVault.Application.Abstractions.Storage;
 using DocuVault.Application.Documents;
 using DocuVault.Infrastructure.Persistence;
+using DocuVault.Infrastructure.Storage;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
+
+var uploadOptions = builder.Configuration
+    .GetSection("DocumentUpload")
+    .Get<DocumentUploadOptions>() ??
+    throw new InvalidOperationException("DocumentUpload configuration is missing.");
+
+builder.Services.AddSingleton(uploadOptions);
+
+builder.Services.Configure<LocalDocumentStorageOptions>(
+    builder.Configuration.GetSection("DocumentStorage")
+);
+
+builder.Services.AddSingleton<IDocumentStorage, LocalDocumentStorage>();
+
+builder.Services.AddScoped<UploadDocumentService>();
 
 // Add services to the container.
 var connectionString =

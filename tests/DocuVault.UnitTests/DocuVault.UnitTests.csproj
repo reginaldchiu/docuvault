@@ -19,6 +19,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="../../src/DocuVault.Infrastructure/DocuVault.Infrastructure.csproj" />
     <ProjectReference Include="..\..\src\DocuVault.Domain\DocuVault.Domain.csproj" />
     <ProjectReference Include="..\..\src\DocuVault.Application\DocuVault.Application.csproj" />
   </ItemGroup>
