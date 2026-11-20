@@ -1,3 +1,5 @@
+using DocuVault.Application.Abstractions.Persistence;
+using DocuVault.Application.Documents;
 using DocuVault.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 
@@ -10,6 +12,9 @@ var connectionString =
 
 builder.Services.AddDbContext<DocuVaultDbContext>(options => options.UseNpgsql(connectionString));
 
+builder.Services.AddScoped<IDocumentWriter, EfDocumentWriter>();
+builder.Services.AddScoped<CreateDocumentService>();
+
 builder.Services.AddControllers();
 
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
@@ -20,7 +25,7 @@ var app = builder.Build();
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
-    app.MapOpenApi();
+    _ = app.MapOpenApi();
 }
 
 app.UseHttpsRedirection();
