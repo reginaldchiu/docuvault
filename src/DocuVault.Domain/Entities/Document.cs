@@ -58,15 +58,12 @@ public class Document
 
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(fileSize);
 
-        if (!IsValidSha256Hash(hash))
-        {
-            throw new ArgumentException("Hash must be a valid SHA-256 hexadecimal string.", nameof(hash));
-        }
-
-        return new Document(fileName, contentType, hash)
-        {
-            FileSize = fileSize,
-            CreatedAt = DateTimeOffset.UtcNow,
-        };
+        return !IsValidSha256Hash(hash)
+            ? throw new ArgumentException("Hash must be a valid SHA-256 hexadecimal string.", nameof(hash))
+            : new Document(fileName, contentType, hash)
+            {
+                FileSize = fileSize,
+                CreatedAt = DateTimeOffset.UtcNow,
+            };
     }
 }

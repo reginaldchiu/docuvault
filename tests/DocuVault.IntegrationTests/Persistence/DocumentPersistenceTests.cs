@@ -24,8 +24,8 @@ public sealed class DocumentPersistenceTests(PostgreSqlFixture fixture) : IClass
 
     private static DateTimeOffset NormalizeToPostgreSqlPrecision(DateTimeOffset value)
     {
-        var utcTicks = value.UtcDateTime.Ticks;
-        var normalizedTicks = utcTicks - utcTicks % 10;
+        long utcTicks = value.UtcDateTime.Ticks;
+        long normalizedTicks = utcTicks - (utcTicks % 10);
 
         return new DateTimeOffset(normalizedTicks, TimeSpan.Zero);
     }
@@ -77,11 +77,11 @@ public sealed class DocumentPersistenceTests(PostgreSqlFixture fixture) : IClass
     [Fact]
     public async Task SaveAsyncShouldPersistMultipleDocuments()
     {
-        var options = CreateOptions();
+        DbContextOptions<DocuVaultDbContext> options = CreateOptions();
         await ResetDatabaseAsync(options);
 
-        var documents = new[]
-        {
+        Document[] documents =
+        [
             Document.Create(
                 "contract.pdf",
                 "application/pdf",
@@ -94,7 +94,7 @@ public sealed class DocumentPersistenceTests(PostgreSqlFixture fixture) : IClass
                 2048,
                 new string('b', 64)
             )
-        };
+        ];
 
         await using (var context = new DocuVaultDbContext(options))
         {
@@ -107,7 +107,7 @@ public sealed class DocumentPersistenceTests(PostgreSqlFixture fixture) : IClass
 
         await using (var context = new DocuVaultDbContext(options))
         {
-            var savedDocuments = await context.Documents
+            List<Document> savedDocuments = await context.Documents
                 .AsNoTracking()
                 .OrderBy(x => x.FileName)
                 .ToListAsync();
@@ -129,7 +129,7 @@ public sealed class DocumentPersistenceTests(PostgreSqlFixture fixture) : IClass
     [Fact]
     public async Task SaveAsyncShouldAllowDocumentsWithSameHash()
     {
-        var options = CreateOptions();
+        DbContextOptions<DocuVaultDbContext> options = CreateOptions();
         await ResetDatabaseAsync(options);
 
         const string hash = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
@@ -161,7 +161,7 @@ public sealed class DocumentPersistenceTests(PostgreSqlFixture fixture) : IClass
         // Assert
         await using (var context = new DocuVaultDbContext(options))
         {
-            var count = await context.Documents
+            int count = await context.Documents
                 .AsNoTracking()
                 .CountAsync(x => x.Hash == hash);
 

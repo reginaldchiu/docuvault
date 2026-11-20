@@ -37,3 +37,6 @@ wwwroot/lib/
 secrets.json
 appsettings.Local.json
 appsettings.Development.local.json
+
+# Uploaded documents
+**/storage/

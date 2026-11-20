@@ -34,7 +34,7 @@ public sealed class CreateDocumentServiceTests
             new string('a', 64)
         );
 
-        var result = await service.CreateAsync(command);
+        Document result = await service.CreateAsync(command);
 
         Assert.NotNull(result);
 
@@ -61,8 +61,8 @@ public sealed class CreateDocumentServiceTests
             new string('a', 64));
 
         // Act
-        var first = await service.CreateAsync(command);
-        var second = await service.CreateAsync(command);
+        Document first = await service.CreateAsync(command);
+        Document second = await service.CreateAsync(command);
 
         // Assert
         Assert.NotEqual(first.Id, second.Id);
